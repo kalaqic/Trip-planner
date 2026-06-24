@@ -237,6 +237,55 @@ html, body {
 .marker-pin.visited { background: linear-gradient(135deg, #2a9d8f, #27ae60); }
 .marker-pin.upcoming { background: linear-gradient(135deg, #6b8cae, #5a7d9a); }
 .marker-pin.pending { background: linear-gradient(135deg, #6c8cff, #3a86ff); }
+.marker-pin.wishlist {
+  background: linear-gradient(135deg, #ffd166, #f4a261);
+  width: 38px;
+  height: 38px;
+}
+
+.wishlist-marker .marker-pin .marker-icon {
+  font-size: 15px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.wishlist-marker .marker-label {
+  background: #fff8e7;
+  border: 1px solid #f4a261;
+  color: #b45309;
+}
+
+.selection-pin .marker-pin.selection {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #f9a8d4, #e879a9);
+  border-width: 2px;
+  box-shadow: 0 3px 12px rgba(232, 121, 169, 0.45);
+}
+
+.selection-pin .marker-pin .marker-icon { font-size: 13px; }
+
+.selection-pin .marker-label {
+  margin-top: 4px;
+  background: #fff;
+  color: #9d174d;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #f9a8d4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.selection-pin.fade-out {
+  animation: selection-pin-fade 0.5s ease forwards;
+}
+
+@keyframes selection-pin-fade {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.85); }
+}
 
 .marker-countdown {
   margin-top: 4px;
@@ -1451,6 +1500,75 @@ html, body {
 .photo-upload.small svg { width: 24px; height: 24px; color: var(--accent); }
 
 .muted { color: var(--text-muted); font-size: 0.85rem; }
+
+/* City click action modal */
+.modal-compact {
+  max-width: 380px;
+  padding: 1.5rem;
+}
+
+.city-action-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.city-action-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.city-action-header h2 {
+  font-size: 1.35rem;
+  margin: 0;
+  color: var(--accent);
+}
+
+.city-action-country {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.city-action-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.city-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: #fff;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.city-action-btn-icon { font-size: 1.25rem; }
+
+.city-action-btn.trip:hover {
+  border-color: var(--accent);
+  background: #eef7f5;
+  transform: translateY(-1px);
+}
+
+.city-action-btn.wishlist:hover {
+  border-color: var(--accent-2);
+  background: #e8f4fc;
+  transform: translateY(-1px);
+}
 
 /* Toast */
 .toast {

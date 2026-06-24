@@ -4,6 +4,15 @@ const TripMap = {
   globeReady: false,
   minAltitude: 0.1,
   maxAltitude: 2.5,
+  selectedPlace: null,
+  _geocodeBusy: false,
+  _lastClickAt: 0,
+  _selectionFadeTimer: null,
+
+  NOMINATIM_HEADERS: {
+    'Accept-Language': 'en',
+    'User-Agent': 'TripPlannerJusteDavid/1.0'
+  },
 
   tileUrl(x, y, l) {
     return `https://basemaps.cartocdn.com/rastertiles/voyager/${l}/${x}/${y}.png`;
@@ -105,6 +114,7 @@ const TripMap = {
     this.globeReady = true;
     this.startCountdownUpdates();
     this.bindZoomControls();
+    this.bindGlobeClick();
     this.refresh();
     this.ensureAttribution();
 
@@ -134,6 +144,110 @@ const TripMap = {
   zoomByWheel(deltaY) {
     if (deltaY < 0) this.zoomIn();
     else if (deltaY > 0) this.zoomOut();
+  },
+
+  bindGlobeClick() {
+    if (!this.globe) return;
+
+    this.globe.onGlobeClick(({ lat, lng }) => {
+      if (document.querySelector('.modal-overlay:not(.hidden)')) return;
+      if (App.activePanel) return;
+      if (Date.now() - this._lastClickAt < 350) return;
+      this._lastClickAt = Date.now();
+      this.handleGlobeClick(lat, lng);
+    });
+  },
+
+  async reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=10`;
+    const res = await fetch(url, { headers: this.NOMINATIM_HEADERS });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const addr = data.address || {};
+    const city = addr.city || addr.town || addr.village || addr.municipality || addr.county || addr.state_district;
+    if (!city) return null;
+
+    return {
+      city,
+      country: addr.country || '',
+      lat: parseFloat(data.lat),
+      lng: parseFloat(data.lon),
+      osmType: data.osm_type,
+      osmId: data.osm_id,
+      displayName: data.display_name
+    };
+  },
+
+  async handleGlobeClick(lat, lng) {
+    if (this._geocodeBusy) return;
+
+    this.cancelSelectionTimers();
+    this.selectPlace({ city: '…', country: '', lat, lng, pending: true }, { fly: true });
+
+    this._geocodeBusy = true;
+
+    try {
+      const place = await this.reverseGeocode(lat, lng);
+      if (!place) {
+        App.showToast('No city found here — try clicking closer to a town');
+        this.scheduleSelectionFadeOut();
+        return;
+      }
+
+      this.selectPlace(place, { fly: false });
+      this.openCityActionModal(place);
+    } catch (err) {
+      console.error('Geocode failed:', err);
+      App.showToast('Could not look up that location');
+      this.scheduleSelectionFadeOut();
+    } finally {
+      this._geocodeBusy = false;
+    }
+  },
+
+  cancelSelectionTimers() {
+    clearTimeout(this._selectionFadeTimer);
+    this._selectionFadeTimer = null;
+  },
+
+  selectPlace(place, options = {}) {
+    const { fly = true } = options;
+    this.selectedPlace = place;
+    this.renderMarkers();
+    if (fly) this.flyTo(place.lat, place.lng, 0.45);
+  },
+
+  scheduleSelectionFadeOut() {
+    this.cancelSelectionTimers();
+    if (!this.selectedPlace) return;
+
+    this._selectionFadeTimer = setTimeout(() => {
+      if (!this.selectedPlace) return;
+      this.selectedPlace = { ...this.selectedPlace, fading: true };
+      this.renderMarkers();
+
+      this._selectionFadeTimer = setTimeout(() => {
+        this.selectedPlace = null;
+        this.renderMarkers();
+        this._selectionFadeTimer = null;
+      }, 500);
+    }, 1000);
+  },
+
+  clearSelection() {
+    this.cancelSelectionTimers();
+    this.selectedPlace = null;
+    this.renderMarkers();
+  },
+
+  openCityActionModal(place) {
+    document.getElementById('city-action-name').textContent = place.city;
+    document.getElementById('city-action-country').textContent = place.country || '';
+    App.openModal('city-action-modal');
+  },
+
+  getSelectedPlace() {
+    return this.selectedPlace;
   },
 
   bindZoomControls() {
@@ -182,8 +296,10 @@ const TripMap = {
 
   destroy() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.cancelSelectionTimers();
     this.unbindZoomControls();
     this.unbindResize();
+    this.selectedPlace = null;
     document.getElementById('map-attribution')?.remove();
     if (this.globe) {
       document.getElementById('map').innerHTML = '';
@@ -229,7 +345,43 @@ const TripMap = {
     });
   },
 
-  createMarkerEl(trip) {
+  createMarkerEl(d) {
+    if (d.isSelectionPin) return this.createSelectionPinEl(d);
+    if (d.isWishlistPin) return this.createWishlistMarkerEl(d);
+    return this.createTripMarkerEl(d);
+  },
+
+  createSelectionPinEl(place) {
+    const el = document.createElement('div');
+    el.className = `trip-marker selection-pin${place.fading ? ' fade-out' : ''}`;
+    const label = place.pending ? '…' : place.city;
+    el.innerHTML = `
+      <div class="marker-pin selection"><span class="marker-icon">📍</span></div>
+      <div class="marker-label">${label}</div>`;
+    this.attachMarkerZoomFix(el);
+    return el;
+  },
+
+  createWishlistMarkerEl(item) {
+    const label = item.title || item.city || 'Wishlist';
+    const el = document.createElement('div');
+    el.className = 'trip-marker wishlist-marker';
+    el.innerHTML = `
+      <div class="marker-pin wishlist"><span class="marker-icon">★</span></div>
+      <div class="marker-label">${label}</div>`;
+
+    const pin = el.querySelector('.marker-pin');
+    pin.addEventListener('click', (e) => {
+      e.stopPropagation();
+      Wishlist.openPanel();
+      Wishlist.render(item.id);
+    });
+
+    this.attachMarkerZoomFix(el);
+    return el;
+  },
+
+  createTripMarkerEl(trip) {
     const status = this.getTripStatus(trip);
     const icon = status === 'visited' ? '✓' : status === 'upcoming' ? '⏱' : '⏳';
     let countdownHtml = '';
@@ -256,24 +408,65 @@ const TripMap = {
     return el;
   },
 
-  renderTrips(trips) {
+  getMapMarkers(trips = Storage.getTrips()) {
+    const markers = trips
+      .filter((t) => t.status !== 'rejected' && t.lat && t.lng)
+      .map((t) => ({ ...t }));
+
+    Storage.getWishlist()
+      .filter((w) => w.type === 'location' && w.lat && w.lng)
+      .forEach((w) => {
+        markers.push({
+          ...w,
+          isWishlistPin: true,
+          city: w.city || w.title
+        });
+      });
+
+    if (this.selectedPlace) {
+      markers.push({
+        id: '__selection__',
+        isSelectionPin: true,
+        city: this.selectedPlace.city,
+        lat: this.selectedPlace.lat,
+        lng: this.selectedPlace.lng,
+        pending: this.selectedPlace.pending,
+        fading: this.selectedPlace.fading
+      });
+    }
+
+    return markers;
+  },
+
+  renderMarkers(trips = Storage.getTrips()) {
     if (!this.globe || !this.globeReady) return;
 
     this.resize();
+    const markers = this.getMapMarkers(trips);
+    this.globe.htmlElementsData([...markers]);
 
-    const visible = trips
-      .filter(t => t.status !== 'rejected' && t.lat && t.lng)
-      .map(t => ({ ...t }));
+    if (!this.selectedPlace) {
+      const trips = markers.filter((m) => !m.isSelectionPin && !m.isWishlistPin);
+      const mapPoints = markers.filter((m) => !m.isSelectionPin);
 
-    this.globe.htmlElementsData([...visible]);
-
-    if (visible.length === 1) {
-      this.flyTo(visible[0].lat, visible[0].lng, 0.35);
-    } else if (visible.length > 1) {
-      const avgLat = visible.reduce((s, t) => s + t.lat, 0) / visible.length;
-      const avgLng = visible.reduce((s, t) => s + t.lng, 0) / visible.length;
-      this.flyTo(avgLat, avgLng, this.getDefaultAltitude());
+      if (trips.length === 1) {
+        this.flyTo(trips[0].lat, trips[0].lng, 0.35);
+      } else if (trips.length > 1) {
+        const avgLat = trips.reduce((s, t) => s + t.lat, 0) / trips.length;
+        const avgLng = trips.reduce((s, t) => s + t.lng, 0) / trips.length;
+        this.flyTo(avgLat, avgLng, this.getDefaultAltitude());
+      } else if (mapPoints.length === 1) {
+        this.flyTo(mapPoints[0].lat, mapPoints[0].lng, 0.35);
+      } else if (mapPoints.length > 1) {
+        const avgLat = mapPoints.reduce((s, t) => s + t.lat, 0) / mapPoints.length;
+        const avgLng = mapPoints.reduce((s, t) => s + t.lng, 0) / mapPoints.length;
+        this.flyTo(avgLat, avgLng, this.getDefaultAltitude());
+      }
     }
+  },
+
+  renderTrips(trips) {
+    this.renderMarkers(trips);
   },
 
   flyTo(lat, lng, altitude = 0.4) {

@@ -179,6 +179,24 @@ const App = {
       if (e.target.id === 'add-wishlist-modal') this.closeModal('add-wishlist-modal');
     });
 
+    document.getElementById('city-action-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'city-action-modal') this.closeModal('city-action-modal');
+    });
+
+    document.getElementById('city-action-trip').addEventListener('click', () => {
+      const place = TripMap.getSelectedPlace();
+      if (!place) return;
+      App.closeModal('city-action-modal', { keepMapSelection: true });
+      Trips.openAddModalWithCity(place);
+    });
+
+    document.getElementById('city-action-wishlist').addEventListener('click', () => {
+      const place = TripMap.getSelectedPlace();
+      if (!place) return;
+      App.closeModal('city-action-modal', { keepMapSelection: true });
+      Wishlist.openAddLocationWithCity(place);
+    });
+
     document.querySelectorAll('.wishlist-type-card').forEach(card => {
       card.addEventListener('click', () => Wishlist.selectType(card.dataset.wtype));
     });
@@ -226,10 +244,15 @@ const App = {
     document.body.style.overflow = 'hidden';
   },
 
-  closeModal(id) {
+  closeModal(id, options = {}) {
     document.getElementById(id).classList.add('hidden');
     document.body.style.overflow = '';
-    if (id === 'add-trip-modal') Trips.resetWizard();
+    if (id === 'city-action-modal' && !options.keepMapSelection) TripMap.scheduleSelectionFadeOut();
+    if (id === 'add-trip-modal') {
+      Trips.resetWizard();
+      TripMap.scheduleSelectionFadeOut();
+    }
+    if (id === 'add-wishlist-modal') TripMap.scheduleSelectionFadeOut();
     if (id === 'trip-detail-modal' && Trips._detailCountdownInterval) {
       clearInterval(Trips._detailCountdownInterval);
     }

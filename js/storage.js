@@ -141,6 +141,7 @@ const Storage = {
       Messaging.render();
       Messaging.updateBadge();
     } else if (type === 'wishlist') {
+      TripMap.refresh();
       Wishlist.render();
     }
   },

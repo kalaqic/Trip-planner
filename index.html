@@ -284,6 +284,30 @@
 
     <div class="overlay hidden" id="overlay"></div>
 
+    <div class="modal-overlay hidden" id="city-action-modal">
+      <div class="modal modal-compact">
+        <button class="close-btn modal-close" data-close-modal="city-action-modal">&times;</button>
+        <div class="city-action-header">
+          <span class="city-action-icon">📍</span>
+          <div>
+            <h2 id="city-action-name">City</h2>
+            <p id="city-action-country" class="city-action-country"></p>
+          </div>
+        </div>
+        <p class="step-desc">What would you like to do?</p>
+        <div class="city-action-btns">
+          <button type="button" class="city-action-btn trip" id="city-action-trip">
+            <span class="city-action-btn-icon">✈</span>
+            <span>Plan a trip here</span>
+          </button>
+          <button type="button" class="city-action-btn wishlist" id="city-action-wishlist">
+            <span class="city-action-btn-icon">✨</span>
+            <span>Add to wishlist</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay hidden" id="add-wishlist-modal">
       <div class="modal">
         <button class="close-btn modal-close" data-close-modal="add-wishlist-modal">&times;</button>

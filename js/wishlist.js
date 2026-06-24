@@ -27,6 +27,21 @@ const Wishlist = {
     App.openModal('add-wishlist-modal');
   },
 
+  openAddLocationWithCity({ city, lat, lng, country }) {
+    this.resetDraft();
+    this.draft = { type: 'location', city, lat, lng, country: country || '' };
+    document.getElementById('wishlist-city-search').value = `${city}${country ? ', ' + country : ''}`;
+    document.getElementById('wishlist-location-title').value = '';
+    document.getElementById('wishlist-notes').value = '';
+    document.querySelectorAll('.wishlist-type-card').forEach((c) =>
+      c.classList.toggle('selected', c.dataset.wtype === 'location'));
+    document.querySelectorAll('.wishlist-form-section').forEach((s) => s.classList.add('hidden'));
+    document.getElementById('wishlist-form-location').classList.remove('hidden');
+    document.getElementById('wishlist-form-heading').textContent = `Wishlist ${city}`;
+    this.showWishlistStep('wishlist-step-form');
+    App.openModal('add-wishlist-modal');
+  },
+
   showWishlistStep(stepId) {
     document.querySelectorAll('.wizard-step').forEach(s => {
       if (s.id.startsWith('wishlist-')) s.classList.add('hidden');

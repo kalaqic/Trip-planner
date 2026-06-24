@@ -50,6 +50,19 @@ const Trips = {
     setTimeout(() => document.getElementById('city-search').focus(), 300);
   },
 
+  openAddModalWithCity({ city, lat, lng, country }) {
+    this.resetWizard();
+    this.wizard.city = city;
+    this.wizard.lat = lat;
+    this.wizard.lng = lng;
+    this.wizard.country = country || '';
+    document.getElementById('city-search').value = `${city}${country ? ', ' + country : ''}`;
+    document.getElementById('selected-city-label').textContent = `${city}${country ? ', ' + country : ''}`;
+    this.updateWizardUi();
+    this.showStep('step-type');
+    App.openModal('add-trip-modal');
+  },
+
   openEditModal(tripId) {
     const trip = Storage.getTrips().find(t => t.id === tripId);
     if (!trip) return;
