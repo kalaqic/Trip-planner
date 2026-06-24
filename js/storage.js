@@ -1,3 +1,13 @@
+let _storageReadyResolve;
+let _storageReadyReject;
+
+function createStorageReady() {
+  return new Promise((resolve, reject) => {
+    _storageReadyResolve = resolve;
+    _storageReadyReject = reject;
+  });
+}
+
 const Storage = {
   SESSION_KEY: 'trip-planner-session',
   LEGACY_KEY: 'trip-planner-data-v2',
@@ -10,16 +20,11 @@ const Storage = {
   },
 
   unsubscribers: [],
-  _readyResolve: null,
-  _readyReject: null,
   _initialized: false,
   connected: false,
   connectionError: null,
 
-  ready: new Promise((resolve, reject) => {
-    Storage._readyResolve = resolve;
-    Storage._readyReject = reject;
-  }),
+  ready: createStorageReady(),
 
   init() {
     if (this._initialized) return this.ready;
@@ -33,7 +38,7 @@ const Storage = {
       const err = new Error(FirebaseApp?.error || 'Firebase is not available');
       this.connectionError = err.message;
       this._initialized = false;
-      this._readyReject(err);
+      _storageReadyReject(err);
       return this.ready;
     }
 
@@ -49,13 +54,13 @@ const Storage = {
       if (ok) {
         this.connected = true;
         this.connectionError = null;
-        this._readyResolve();
+        _storageReadyResolve();
       } else {
         this.connectionError = err?.message || 'Could not connect to database';
         this._initialized = false;
         this.unsubscribers.forEach((unsub) => unsub());
         this.unsubscribers = [];
-        this._readyReject(err || new Error(this.connectionError));
+        _storageReadyReject(err || new Error(this.connectionError));
       }
     };
 
@@ -123,10 +128,7 @@ const Storage = {
     this._initialized = false;
     this.connected = false;
     this.cache = { trips: [], messages: [], wishlist: [] };
-    this.ready = new Promise((resolve, reject) => {
-      this._readyResolve = resolve;
-      this._readyReject = reject;
-    });
+    this.ready = createStorageReady();
   },
 
   _notify(type) {
