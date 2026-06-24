@@ -24,7 +24,7 @@ const App = {
       banner = document.createElement('div');
       banner.id = 'connection-warning';
       banner.className = 'connection-warning';
-      login.querySelector('.login-card')?.prepend(banner);
+      login.querySelector('.login-content')?.prepend(banner);
     }
 
     banner.innerHTML = `
@@ -34,7 +34,7 @@ const App = {
   },
 
   bindLogin() {
-    document.querySelectorAll('.login-user-btn').forEach(btn => {
+    document.querySelectorAll('.login-profile').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (!Storage.connected) {
           try {
