@@ -1,6 +1,7 @@
 const Storage = {
   SESSION_KEY: 'trip-planner-session',
   LEGACY_KEY: 'trip-planner-data-v2',
+  CONNECT_TIMEOUT_MS: 20000,
 
   cache: {
     trips: [],
@@ -10,10 +11,14 @@ const Storage = {
 
   unsubscribers: [],
   _readyResolve: null,
+  _readyReject: null,
   _initialized: false,
+  connected: false,
+  connectionError: null,
 
-  ready: new Promise((resolve) => {
+  ready: new Promise((resolve, reject) => {
     Storage._readyResolve = resolve;
+    Storage._readyReject = reject;
   }),
 
   init() {
@@ -24,21 +29,52 @@ const Storage = {
       localStorage.removeItem(this.LEGACY_KEY);
     } catch (_) {}
 
+    if (!FirebaseApp?.loaded || !FirebaseApp.db) {
+      const err = new Error(FirebaseApp?.error || 'Firebase is not available');
+      this.connectionError = err.message;
+      this._initialized = false;
+      this._readyReject(err);
+      return this.ready;
+    }
+
     const db = FirebaseApp.db;
     let pending = 3;
     const readyFlags = { trips: false, messages: false, wishlist: false };
+    let settled = false;
+
+    const finish = (ok, err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(this._connectTimer);
+      if (ok) {
+        this.connected = true;
+        this.connectionError = null;
+        this._readyResolve();
+      } else {
+        this.connectionError = err?.message || 'Could not connect to database';
+        this._initialized = false;
+        this.unsubscribers.forEach((unsub) => unsub());
+        this.unsubscribers = [];
+        this._readyReject(err || new Error(this.connectionError));
+      }
+    };
 
     const markReady = (key) => {
       if (readyFlags[key]) return;
       readyFlags[key] = true;
       pending -= 1;
-      if (pending <= 0) this._readyResolve();
+      if (pending <= 0) finish(true);
     };
 
+    this._connectTimer = setTimeout(() => {
+      finish(false, new Error('Connection timed out. Check your internet and try again.'));
+    }, this.CONNECT_TIMEOUT_MS);
+
     this.unsubscribers.push(
-      db.collection('trips').orderBy('startDate', 'asc').onSnapshot(
+      db.collection('trips').onSnapshot(
         (snap) => {
           this.cache.trips = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          this.cache.trips.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
           this._notify('trips');
           markReady('trips');
         },
@@ -48,9 +84,11 @@ const Storage = {
         }
       ),
 
-      db.collection('messages').orderBy('createdAt', 'desc').onSnapshot(
+      db.collection('messages').onSnapshot(
         (snap) => {
-          this.cache.messages = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          this.cache.messages = snap.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
           this._notify('messages');
           markReady('messages');
         },
@@ -60,9 +98,11 @@ const Storage = {
         }
       ),
 
-      db.collection('wishlist').orderBy('createdAt', 'desc').onSnapshot(
+      db.collection('wishlist').onSnapshot(
         (snap) => {
-          this.cache.wishlist = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          this.cache.wishlist = snap.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
           this._notify('wishlist');
           markReady('wishlist');
         },
@@ -77,12 +117,15 @@ const Storage = {
   },
 
   destroy() {
+    clearTimeout(this._connectTimer);
     this.unsubscribers.forEach((unsub) => unsub());
     this.unsubscribers = [];
     this._initialized = false;
+    this.connected = false;
     this.cache = { trips: [], messages: [], wishlist: [] };
-    this.ready = new Promise((resolve) => {
+    this.ready = new Promise((resolve, reject) => {
       this._readyResolve = resolve;
+      this._readyReject = reject;
     });
   },
 

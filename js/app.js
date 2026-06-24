@@ -10,26 +10,41 @@ const App = {
       await Storage.init();
     } catch (err) {
       console.error('Firebase init failed:', err);
-      this.showConnectionError();
-      return;
+      this.showConnectionWarning(err?.message);
     }
-    if (Auth.isLoggedIn()) this.showApp();
+    if (Auth.isLoggedIn() && Storage.connected) this.showApp();
   },
 
-  showConnectionError() {
+  showConnectionWarning(message) {
     const login = document.getElementById('login-screen');
     login.classList.remove('hidden');
-    login.innerHTML = `
-      <div class="login-card">
-        <h1>Trip Planner</h1>
-        <p class="login-subtitle">Could not connect to the database. Check your internet connection and try again.</p>
-        <button type="button" class="btn-primary" onclick="location.reload()">Retry</button>
-      </div>`;
+
+    let banner = document.getElementById('connection-warning');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'connection-warning';
+      banner.className = 'connection-warning';
+      login.querySelector('.login-card')?.prepend(banner);
+    }
+
+    banner.innerHTML = `
+      <p><strong>Could not connect to the database.</strong></p>
+      <p>${message || 'Check your internet connection and try again.'}</p>
+      <button type="button" class="btn-primary btn-small" onclick="location.reload()">Retry</button>`;
   },
 
   bindLogin() {
     document.querySelectorAll('.login-user-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
+        if (!Storage.connected) {
+          try {
+            if (!Storage._initialized) await Storage.init();
+            else await Storage.ready;
+          } catch (err) {
+            App.showConnectionWarning(err?.message);
+            return;
+          }
+        }
         Auth.login(btn.dataset.user);
         await Storage.ready;
         this.showApp();

@@ -7,8 +7,23 @@ const firebaseConfig = {
   appId: '1:205753906389:web:d867cafbddf9ef8be39e5c'
 };
 
-firebase.initializeApp(firebaseConfig);
-
 const FirebaseApp = {
-  db: firebase.firestore()
+  db: null,
+  loaded: false,
+  error: null
 };
+
+try {
+  if (typeof firebase === 'undefined') {
+    FirebaseApp.error = 'Firebase SDK failed to load. Check your network or disable ad blockers.';
+  } else {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    FirebaseApp.db = firebase.firestore();
+    FirebaseApp.loaded = true;
+  }
+} catch (err) {
+  FirebaseApp.error = err.message || 'Firebase failed to initialize';
+  console.error('Firebase init error:', err);
+}

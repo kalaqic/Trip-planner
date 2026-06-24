@@ -73,6 +73,20 @@ html, body {
 .login-card h1 { font-size: 1.85rem; font-weight: 700; color: var(--accent); }
 .login-subtitle { color: var(--text-muted); margin: 0.5rem 0 2rem; }
 
+.connection-warning {
+  background: #fff5f5;
+  border: 2px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+  font-size: 0.85rem;
+  color: #991b1b;
+}
+
+.connection-warning p { margin: 0 0 0.5rem; line-height: 1.4; }
+.connection-warning .btn-small { margin-top: 0.35rem; padding: 0.5rem 1rem; font-size: 0.85rem; }
+
 .login-users { display: flex; gap: 1rem; justify-content: center; }
 
 .login-user-btn {
