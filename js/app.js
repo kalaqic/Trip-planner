@@ -65,9 +65,11 @@ const App = {
 
     TripMap.refresh();
     Wishlist.render();
+    Presence.start();
   },
 
-  signOut() {
+  async signOut() {
+    await Presence.stop();
     TripMap.destroy();
     Storage.destroy();
     Auth.logout();

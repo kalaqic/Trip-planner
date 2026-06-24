@@ -41,6 +41,7 @@
         <button class="user-badge" id="user-badge" type="button">
           <span class="avatar" id="current-avatar">J</span>
           <span id="current-user-name">Juste</span>
+          <span class="partner-status-dot" id="partner-status-dot" title="Partner status"></span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="user-dropdown hidden" id="user-dropdown">
@@ -63,6 +64,15 @@
         </button>
       </div>
     </header>
+
+    <div id="partner-online-banner" class="partner-online-banner hidden">
+      <div class="partner-online-content">
+        <button type="button" class="partner-online-dismiss" id="partner-online-dismiss" aria-label="Dismiss">&times;</button>
+        <p class="partner-online-title" id="partner-online-text">Partner is online</p>
+        <p class="partner-online-sub">Send a little love note</p>
+        <div class="love-note-actions" id="love-note-actions"></div>
+      </div>
+    </div>
 
     <aside class="panel panel-right" id="trip-panel">
       <div class="panel-header">
@@ -364,6 +374,7 @@
   <script src="js/map.js"></script>
   <script src="js/trips.js"></script>
   <script src="js/messaging.js"></script>
+  <script src="js/presence.js"></script>
   <script src="js/wishlist.js"></script>
   <script src="js/app.js"></script>
 </body>

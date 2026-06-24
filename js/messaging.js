@@ -31,6 +31,19 @@ const Messaging = {
     });
   },
 
+  async sendLoveNote(text, from, to, noteId) {
+    await Storage.addMessage({
+      id: generateId(),
+      type: 'love_note',
+      noteId,
+      from,
+      to,
+      text,
+      read: false,
+      createdAt: new Date().toISOString()
+    });
+  },
+
   getUnreadCount(user) {
     return Storage.getMessages().filter(m => m.to === user && !m.read).length;
   },
@@ -142,6 +155,7 @@ const Messaging = {
       const trip = msg.tripId ? Storage.getTrips().find(t => t.id === msg.tripId) : null;
       const wishlistItem = msg.wishlistId ? Storage.getWishlist().find(w => w.id === msg.wishlistId) : null;
       const isApproval = msg.type === 'trip_approval' && msg.status === 'pending' && msg.to === user;
+      const isLoveNote = msg.type === 'love_note';
       const unread = !msg.read && msg.to === user;
 
       let tripPreview = '';
@@ -178,8 +192,8 @@ const Messaging = {
       });
 
       return `
-        <div class="message-card ${unread ? 'unread' : ''}" data-id="${msg.id}">
-          <div class="message-from">From <strong>${fromInfo?.name || msg.from}</strong> · ${time}</div>
+        <div class="message-card ${unread ? 'unread' : ''} ${isLoveNote ? 'love-note' : ''}" data-id="${msg.id}">
+          <div class="message-from">${isLoveNote ? '💕 ' : ''}From <strong>${fromInfo?.name || msg.from}</strong> · ${time}</div>
           <div class="message-text">${msg.text}</div>
           ${tripPreview}
           ${wishlistPreview}
