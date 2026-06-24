@@ -81,6 +81,35 @@ const App = {
     TripMap.refresh();
     Wishlist.render();
     Presence.start();
+    this.maybeShowOnboarding();
+  },
+
+  ONBOARDING_KEY: 'trip-planner-onboarding-v1',
+
+  hasSeenOnboarding(user) {
+    try {
+      return localStorage.getItem(`${this.ONBOARDING_KEY}-${user}`) === '1';
+    } catch (_) {
+      return false;
+    }
+  },
+
+  markOnboardingSeen(user) {
+    try {
+      localStorage.setItem(`${this.ONBOARDING_KEY}-${user}`, '1');
+    } catch (_) {}
+  },
+
+  maybeShowOnboarding() {
+    const user = Auth.getCurrentUser();
+    if (!user || this.hasSeenOnboarding(user)) return;
+    setTimeout(() => this.openModal('onboarding-modal'), 400);
+  },
+
+  completeOnboarding() {
+    const user = Auth.getCurrentUser();
+    if (user) this.markOnboardingSeen(user);
+    this.closeModal('onboarding-modal');
   },
 
   async signOut() {
@@ -215,6 +244,10 @@ const App = {
       this.wishlistSearchTimeout = setTimeout(() => {
         Wishlist.searchCity(wishlistCitySearch.value.trim());
       }, 400);
+    });
+
+    document.getElementById('onboarding-done')?.addEventListener('click', () => {
+      this.completeOnboarding();
     });
   },
 
