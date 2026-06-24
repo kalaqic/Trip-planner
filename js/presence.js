@@ -11,12 +11,24 @@ const Presence = {
     juste: { subject: 'she', object: 'her' }
   },
 
-  LOVE_NOTES: [
-    { id: 'kisses', label: 'Kisses 💋' },
-    { id: 'love', label: 'Love you ❤️' },
-    { id: 'miss', label: 'Miss you 🥺' },
-    { id: 'hugs', label: 'Hugs 🤗' }
-  ],
+  LOVE_NOTES: {
+    david: [
+      { id: 'love', label: 'love you babyyyy' },
+      { id: 'miss', label: 'miss you babyyy' },
+      { id: 'kisses', label: 'sending kissessss' },
+      { id: 'scratches', label: 'sending back scratchessss' }
+    ],
+    juste: [
+      { id: 'love', label: 'love you loveee' },
+      { id: 'miss', label: 'miss you loveee' },
+      { id: 'kisses', label: 'sending kissessss' },
+      { id: 'scratches', label: 'sending back scratchessss' }
+    ]
+  },
+
+  getLoveNotes(user) {
+    return this.LOVE_NOTES[user] || [];
+  },
 
   isRecentlyActive(data) {
     if (!data?.online) return false;
@@ -27,17 +39,10 @@ const Presence = {
 
   formatLoveText(fromUser, noteId) {
     const info = Auth.getUserInfo(fromUser);
-    const p = this.PRONOUNS[fromUser];
     const name = info?.name || fromUser;
-
-    const templates = {
-      kisses: `${name} is online and ${p.subject} sends kisses 💋`,
-      love: `${name} is online and ${p.subject} sends love you ❤️`,
-      miss: `${name} is online and ${p.subject} says ${p.subject} misses you 🥺`,
-      hugs: `${name} is online and ${p.subject} sends hugs 🤗`
-    };
-
-    return templates[noteId] || `${name} is online and sends love 💕`;
+    const note = this.getLoveNotes(fromUser).find((n) => n.id === noteId);
+    const phrase = note?.label || 'sending love';
+    return `${name} is online — ${phrase}`;
   },
 
   async start() {
@@ -167,7 +172,10 @@ const Presence = {
     const container = document.getElementById('love-note-actions');
     if (!container) return;
 
-    container.innerHTML = this.LOVE_NOTES.map((note) =>
+    const user = Auth.getCurrentUser();
+    const notes = this.getLoveNotes(user);
+
+    container.innerHTML = notes.map((note) =>
       `<button type="button" class="love-note-btn" data-love="${note.id}">${note.label}</button>`
     ).join('');
 

@@ -44,8 +44,15 @@ const Messaging = {
     });
   },
 
+  getVisibleMessages(user) {
+    return Storage.getMessages().filter((m) => {
+      if (m.type === 'love_note') return m.to === user;
+      return m.to === user || m.from === user;
+    });
+  },
+
   getUnreadCount(user) {
-    return Storage.getMessages().filter(m => m.to === user && !m.read).length;
+    return this.getVisibleMessages(user).filter((m) => m.to === user && !m.read).length;
   },
 
   updateBadge() {
@@ -139,7 +146,7 @@ const Messaging = {
     if (!user) return;
 
     const listEl = document.getElementById('messages-list');
-    const messages = Storage.getMessages().filter(m => m.to === user || m.from === user);
+    const messages = this.getVisibleMessages(user);
 
     if (!messages.length) {
       listEl.innerHTML = `
