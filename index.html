@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Trip Planner — Juste & David</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">✈</div>
+      <h1>Trip Planner</h1>
+      <p class="login-subtitle">Plan perfect adventures together</p>
+      <div class="login-users">
+        <button class="login-user-btn" data-user="juste">
+          <span class="avatar juste">J</span>
+          <span>Juste</span>
+        </button>
+        <button class="login-user-btn" data-user="david">
+          <span class="avatar david">D</span>
+          <span>David</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="app hidden">
+    <div id="map"></div>
+
+    <div class="map-zoom-controls" id="map-zoom-controls">
+      <button type="button" class="zoom-btn" id="zoom-in" title="Zoom in (↑)">+</button>
+      <button type="button" class="zoom-btn" id="zoom-out" title="Zoom out (↓)">−</button>
+    </div>
+
+    <header class="top-bar">
+      <div class="user-menu-wrap">
+        <button class="user-badge" id="user-badge" type="button">
+          <span class="avatar" id="current-avatar">J</span>
+          <span id="current-user-name">Juste</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="user-dropdown hidden" id="user-dropdown">
+          <button type="button" id="btn-signout">Sign out</button>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="btn-wishlist" title="Wishlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-messages" title="Messages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="badge hidden" id="msg-badge">0</span>
+        </button>
+        <button class="icon-btn" id="btn-list" title="All trips">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button class="icon-btn primary" id="btn-add" title="Add trip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <aside class="panel panel-right" id="trip-panel">
+      <div class="panel-header">
+        <h2>Our Trips</h2>
+        <button class="close-btn" data-close="trip-panel">&times;</button>
+      </div>
+      <div class="panel-tabs">
+        <button class="tab active" data-tab="all">All</button>
+        <button class="tab" data-tab="upcoming">Upcoming</button>
+        <button class="tab" data-tab="visited">Visited</button>
+        <button class="tab" data-tab="pending">Pending</button>
+      </div>
+      <div class="panel-body" id="trip-list"></div>
+    </aside>
+
+    <aside class="panel panel-right" id="wishlist-panel">
+      <div class="panel-header">
+        <h2>Our Wishlist</h2>
+        <div class="panel-header-actions">
+          <button class="icon-btn small" id="btn-add-wishlist" title="Add to wishlist">+</button>
+          <button class="close-btn" data-close="wishlist-panel">&times;</button>
+        </div>
+      </div>
+      <div class="panel-body" id="wishlist-list"></div>
+    </aside>
+
+    <aside class="panel panel-right" id="messages-panel">
+      <div class="panel-header">
+        <h2>Messages</h2>
+        <button class="close-btn" data-close="messages-panel">&times;</button>
+      </div>
+      <div class="panel-body" id="messages-list"></div>
+    </aside>
+
+    <div class="modal-overlay hidden" id="trip-detail-modal">
+      <div class="modal modal-large">
+        <button class="close-btn modal-close" data-close-modal="trip-detail-modal">&times;</button>
+        <div id="trip-detail-content"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="add-trip-modal">
+      <div class="modal">
+        <button class="close-btn modal-close" data-close-modal="add-trip-modal">&times;</button>
+
+        <div class="wizard-step" id="step-city">
+          <h2>New Trip</h2>
+          <p class="step-desc">Where are you going?</p>
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="city-search" placeholder="Search for a city..." autocomplete="off">
+          </div>
+          <div class="search-results" id="city-results"></div>
+        </div>
+
+        <div class="wizard-step hidden" id="step-type">
+          <h2>What kind of trip?</h2>
+          <p class="step-desc">Choose your adventure type</p>
+          <div class="type-cards">
+            <button class="type-card" data-type="workaway">
+              <span class="type-icon">🌱</span>
+              <span class="type-label">Workaway</span>
+              <span class="type-desc">Volunteer & travel experience</span>
+            </button>
+            <button class="type-card" data-type="basic">
+              <span class="type-icon">🏠</span>
+              <span class="type-label">Basic Trip</span>
+              <span class="type-desc">Vacation with accommodation</span>
+            </button>
+          </div>
+          <button class="btn-back" id="back-to-city">← Back</button>
+        </div>
+
+        <div class="wizard-step hidden" id="step-details">
+          <h2>Trip Details</h2>
+          <p class="step-desc" id="selected-city-label"></p>
+          <form id="trip-form" class="trip-form">
+            <div class="form-group">
+              <label for="trip-name">Trip Name</label>
+              <input type="text" id="trip-name" required placeholder="e.g. Summer in Barcelona">
+            </div>
+            <div class="form-group">
+              <label for="trip-desc">Description</label>
+              <textarea id="trip-desc" rows="2" placeholder="What's the plan?"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="trip-notes">Additional Notes</label>
+              <textarea id="trip-notes" rows="2" placeholder="Packing ideas, reminders, anything else..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="trip-start">Start Date</label>
+                <input type="date" id="trip-start" required>
+              </div>
+              <div class="form-group">
+                <label for="trip-end">End Date</label>
+                <input type="date" id="trip-end" required>
+              </div>
+            </div>
+            <div class="form-group workaway-field hidden">
+              <label for="workaway-url">Workaway URL</label>
+              <input type="url" id="workaway-url" placeholder="https://www.workaway.info/...">
+            </div>
+            <div class="form-group basic-field hidden">
+              <label for="apartment-location">Apartment Location</label>
+              <input type="text" id="apartment-location" placeholder="Address or area name">
+            </div>
+            <div class="form-group basic-field hidden">
+              <label for="booking-link">Booking Link</label>
+              <input type="url" id="booking-link" placeholder="https://booking.com/...">
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-back" id="back-to-type">← Back</button>
+              <button type="button" class="btn-text" id="change-destination">Change destination</button>
+              <button type="button" class="btn-primary" id="to-journey-step">Next: How we get there →</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="wizard-step hidden" id="step-journey">
+          <h2>How do we get there?</h2>
+          <p class="step-desc">Add transport legs — together or separately</p>
+
+          <div class="journey-timeline" id="journey-timeline"></div>
+
+          <div class="leg-route-picker hidden" id="leg-route-picker">
+            <h3>Who is this leg for?</h3>
+            <p class="step-desc">Choose together or whose separate route</p>
+            <div class="route-picker-btns">
+              <button type="button" class="route-pick-btn" data-route="together">
+                <span class="route-pick-icon">👫</span>
+                <span>Together</span>
+              </button>
+              <button type="button" class="route-pick-btn" data-route="juste">
+                <span class="avatar juste small">J</span>
+                <span>Juste</span>
+              </button>
+              <button type="button" class="route-pick-btn" data-route="david">
+                <span class="avatar david small">D</span>
+                <span>David</span>
+              </button>
+            </div>
+            <button type="button" class="btn-back" id="cancel-route-pick">Cancel</button>
+          </div>
+
+          <div class="leg-form hidden" id="leg-form">
+            <h3 id="leg-form-title">Add transport leg</h3>
+            <p class="leg-form-route" id="leg-form-route"></p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Type</label>
+                <select id="leg-type">
+                  <option value="plane">✈ Plane</option>
+                  <option value="bus">🚌 Bus</option>
+                  <option value="train">🚂 Train</option>
+                  <option value="car">🚗 Car</option>
+                  <option value="ferry">⛴ Ferry</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Price (€)</label>
+                <input type="number" id="leg-price" min="0" step="0.01" placeholder="0.00">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>From</label>
+                <input type="text" id="leg-from" placeholder="e.g. Vilnius, Lithuania">
+              </div>
+              <div class="form-group">
+                <label>To</label>
+                <input type="text" id="leg-to" placeholder="e.g. Berlin">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Departure</label>
+                <input type="time" id="leg-depart">
+              </div>
+              <div class="form-group">
+                <label>Arrival</label>
+                <input type="time" id="leg-arrive">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ticket Link</label>
+              <input type="url" id="leg-ticket" placeholder="https://...">
+            </div>
+            <div class="leg-form-actions">
+              <button type="button" class="btn-secondary" id="cancel-leg">Cancel</button>
+              <button type="button" class="btn-primary" id="save-leg">Add leg</button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-add-leg" id="btn-add-leg">+ Add transport leg</button>
+
+          <div class="journey-total">
+            <span>Estimated transport cost</span>
+            <strong id="journey-total-cost">€0.00</strong>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-back" id="back-to-details">← Back</button>
+            <button type="button" class="btn-primary" id="submit-trip">Send for Approval</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="overlay"></div>
+
+    <div class="modal-overlay hidden" id="add-wishlist-modal">
+      <div class="modal">
+        <button class="close-btn modal-close" data-close-modal="add-wishlist-modal">&times;</button>
+
+        <div class="wizard-step" id="wishlist-step-type">
+          <h2>Add to Wishlist</h2>
+          <p class="step-desc">What are you dreaming about?</p>
+          <div class="type-cards">
+            <button type="button" class="type-card wishlist-type-card" data-wtype="location">
+              <span class="type-icon">📍</span>
+              <span class="type-label">Location</span>
+              <span class="type-desc">A city or place to visit</span>
+            </button>
+            <button type="button" class="type-card wishlist-type-card" data-wtype="workaway">
+              <span class="type-icon">🌱</span>
+              <span class="type-label">Workaway</span>
+              <span class="type-desc">Save a Workaway listing</span>
+            </button>
+            <button type="button" class="type-card wishlist-type-card" data-wtype="reel">
+              <span class="type-icon">🎬</span>
+              <span class="type-label">Reel</span>
+              <span class="type-desc">Instagram or TikTok reel link</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="wizard-step hidden" id="wishlist-step-form">
+          <h2 id="wishlist-form-heading">Details</h2>
+          <form id="wishlist-form" class="trip-form">
+            <div class="wishlist-form-section hidden" id="wishlist-form-location">
+              <div class="form-group">
+                <label>Search location</label>
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" id="wishlist-city-search" placeholder="Search for a city..." autocomplete="off">
+                </div>
+                <div class="search-results" id="wishlist-city-results"></div>
+              </div>
+              <div class="form-group">
+                <label for="wishlist-location-title">Label (optional)</label>
+                <input type="text" id="wishlist-location-title" placeholder="e.g. That cliffside town">
+              </div>
+            </div>
+
+            <div class="wishlist-form-section hidden" id="wishlist-form-workaway">
+              <div class="form-group">
+                <label for="wishlist-workaway-url">Workaway URL</label>
+                <input type="url" id="wishlist-workaway-url" placeholder="https://www.workaway.info/...">
+              </div>
+              <div class="form-group">
+                <label for="wishlist-workaway-title">Label (optional)</label>
+                <input type="text" id="wishlist-workaway-title" placeholder="e.g. Organic farm in Tuscany">
+              </div>
+            </div>
+
+            <div class="wishlist-form-section hidden" id="wishlist-form-reel">
+              <div class="form-group">
+                <label for="wishlist-reel-url">Reel URL</label>
+                <input type="url" id="wishlist-reel-url" placeholder="https://instagram.com/reel/...">
+              </div>
+              <div class="form-group">
+                <label for="wishlist-reel-title">Label (optional)</label>
+                <input type="text" id="wishlist-reel-title" placeholder="e.g. Amalfi coast vibes">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="wishlist-notes">Notes (optional)</label>
+              <textarea id="wishlist-notes" rows="2" placeholder="Why this caught your eye..."></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-back" id="wishlist-back-type">← Back</button>
+              <button type="submit" class="btn-primary">Add to Wishlist</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/trips.js"></script>
+  <script src="js/messaging.js"></script>
+  <script src="js/wishlist.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Demo app with hardcoded local accounts — open access for now.
+    // Tighten these rules when you add Firebase Authentication.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
