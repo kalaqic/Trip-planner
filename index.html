@@ -40,6 +40,11 @@
   <div id="app" class="app hidden">
     <div id="map"></div>
 
+    <div id="effects-layer" class="effects-layer" aria-hidden="true">
+      <canvas id="seasonal-canvas"></canvas>
+      <div id="celebration-layer"></div>
+    </div>
+
     <div class="map-zoom-controls" id="map-zoom-controls">
       <button type="button" class="zoom-btn" id="zoom-in" title="Zoom in (↑)">+</button>
       <button type="button" class="zoom-btn" id="zoom-out" title="Zoom out (↓)">−</button>
@@ -455,12 +460,23 @@
         <button type="button" class="btn-primary onboarding-done" id="onboarding-done">Got it — let's travel!</button>
       </div>
     </div>
+
+    <div class="travelers" id="travelers">
+      <div class="travelers-sprite-wrap">
+        <span class="travelers-hint" id="travelers-hint" aria-hidden="true">tap us</span>
+        <div class="travelers-sprite state-walk" id="travelers-sprite" role="img" aria-label="Juste and David"></div>
+      </div>
+      <div class="travelers-bubble hidden" id="travelers-bubble" role="status" aria-live="polite"></div>
+      <button type="button" class="travelers-note" id="travelers-note" title="Little note" aria-label="Read a cute note">💌</button>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/globe.gl"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@11.6.0/firebase-app-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@11.6.0/firebase-firestore-compat.js"></script>
   <script src="./js/firebase.js"></script>
+  <script src="./js/travelers.js"></script>
+  <script src="./js/effects.js"></script>
   <script src="./js/storage.js"></script>
   <script src="./js/auth.js"></script>
   <script src="./js/map.js"></script>

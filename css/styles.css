@@ -222,10 +222,227 @@ html, body {
 }
 #map canvas:active { cursor: grabbing; }
 
+/* Pixel travelers — sprite sheets in assets/*-sprites.png */
+.travelers {
+  position: fixed;
+  bottom: max(-0rem);
+  left: max(1.35rem, env(safe-area-inset-left));
+  z-index: 350;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+.travelers-note {
+  pointer-events: auto;
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  margin-bottom: 0.65rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: #fff8ef;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(42, 157, 143, 0.18);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.travelers-note:hover {
+  transform: scale(1.08) rotate(-4deg);
+  border-color: var(--accent-2);
+  box-shadow: 0 4px 14px rgba(58, 134, 255, 0.22);
+}
+
+.travelers-note:active {
+  transform: scale(0.96);
+}
+
+.travelers-sprite-wrap {
+  position: relative;
+  pointer-events: none;
+  animation: travelers-bob 3.2s ease-in-out infinite;
+}
+
+.travelers-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 0.15rem);
+  z-index: 2;
+  transform: translateX(-50%);
+  font-family: var(--font);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: 0 1px 4px rgba(20, 55, 80, 0.45);
+  pointer-events: none;
+  opacity: 0;
+  white-space: nowrap;
+  animation: travelers-hint-whisper 10s ease-in-out infinite;
+}
+
+.travelers.hint-dismissed .travelers-hint {
+  display: none;
+}
+
+.travelers-bubble {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: min(240px, 78vw);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(168, 212, 230, 0.85);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 6px 22px rgba(20, 55, 80, 0.22);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+  will-change: transform, opacity, filter;
+}
+
+.travelers-bubble.hidden {
+  visibility: hidden;
+}
+
+.travelers-bubble.rising {
+  visibility: visible;
+  animation: travelers-smoke-rise 3.4s ease-in-out forwards;
+}
+
+.travelers-sprite {
+  --traveler-w: 140px;
+  width: var(--traveler-w);
+  aspect-ratio: var(--sprite-ratio, 301 / 465);
+  height: auto;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: var(--sprite-size, 500% 100%);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: auto;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.travelers:not(.hint-dismissed) .travelers-sprite::after {
+  content: '';
+  position: absolute;
+  inset: 8% 4% 2%;
+  border-radius: 42%;
+  border: 1px solid rgba(255, 255, 255, 0);
+  pointer-events: none;
+  animation: travelers-hint-ring 10s ease-in-out infinite;
+}
+
+.travelers-sprite.state-walk {
+  --sprite-url: url('../assets/us-sprites.png');
+  --sprite-ratio: 301 / 465;
+  --sprite-size: 500% 100%;
+  background-image: var(--sprite-url);
+  animation: sprite-walk 2.2s steps(3) infinite;
+}
+
+.travelers-sprite.state-kiss {
+  --sprite-url: url('../assets/kiss-sprites.png');
+  --sprite-ratio: 301 / 465;
+  --sprite-size: 500% 100%;
+  background-image: var(--sprite-url);
+  animation: sprite-play-5 var(--sprite-dur, 2s) steps(4) 1 forwards;
+}
+
+.travelers-sprite.state-spin {
+  --sprite-url: url('../assets/spin-sprites.png');
+  --sprite-ratio: 301 / 470;
+  --sprite-size: 500% 100%;
+  background-image: var(--sprite-url);
+  animation: sprite-play-5 var(--sprite-dur, 2.8s) steps(4) 1 forwards;
+}
+
+.travelers-sprite.state-tickle {
+  --sprite-url: url('../assets/tickle-sprites.png');
+  --sprite-ratio: 301 / 427;
+  --sprite-size: 500% 100%;
+  background-image: var(--sprite-url);
+  animation: sprite-play-5 var(--sprite-dur, 2.2s) steps(4) 1 forwards;
+}
+
+.travelers-sprite.state-excited {
+  --sprite-url: url('../assets/us-sprites.png');
+  --sprite-ratio: 301 / 465;
+  --sprite-size: 500% 100%;
+  background-image: var(--sprite-url);
+  animation: none;
+  background-position: 100% 0;
+}
+
+@keyframes sprite-walk {
+  from { background-position: 0% 0; }
+  to { background-position: 75% 0; }
+}
+
+@keyframes sprite-play-5 {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
+@keyframes travelers-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes travelers-hint-whisper {
+  0%, 22%, 100% { opacity: 0; transform: translateX(-50%) translateY(2px); }
+  8% { opacity: 0.5; transform: translateX(-50%) translateY(-1px); }
+  14% { opacity: 0.28; transform: translateX(-50%) translateY(-3px); }
+}
+
+@keyframes travelers-hint-ring {
+  0%, 22%, 100% { opacity: 0; border-color: rgba(255, 255, 255, 0); transform: scale(0.98); }
+  8% { opacity: 1; border-color: rgba(255, 255, 255, 0.22); transform: scale(1); }
+  14% { opacity: 0; border-color: rgba(255, 255, 255, 0); transform: scale(1.03); }
+}
+
+@keyframes travelers-smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+    filter: blur(0);
+  }
+  14% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    filter: blur(0);
+  }
+  34% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(calc(-1 * var(--rise-px, 130px)));
+    filter: blur(5px);
+  }
+}
+
 .map-zoom-controls {
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
-  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  bottom: calc(10rem + env(safe-area-inset-bottom));
   z-index: 450;
   display: flex;
   flex-direction: column;
@@ -1735,6 +1952,124 @@ html, body {
 
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* Effects — seasonal particles, celebrations, night glow */
+.effects-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+#seasonal-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#celebration-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: visible;
+}
+
+.burst-particle {
+  position: fixed;
+  font-size: 1.35rem;
+  line-height: 1;
+  pointer-events: none;
+  animation: burst-out var(--burst-dur, 1s) ease-out forwards;
+  z-index: 900;
+  text-shadow: 0 1px 4px rgba(255, 100, 150, 0.35);
+}
+
+@keyframes burst-out {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--bx)), calc(-50% + var(--by))) scale(1.15) rotate(25deg); }
+}
+
+.float-heart {
+  position: fixed;
+  font-size: 1.1rem;
+  line-height: 1;
+  pointer-events: none;
+  animation: float-up var(--float-dur, 1.5s) ease-out forwards;
+  z-index: 500;
+}
+
+@keyframes float-up {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--drift-x)), calc(-50% - 72px)) scale(1.05); }
+}
+
+html.night-glow {
+  --bg: #e8e2d9;
+  --surface: #f7f2ea;
+  --surface-2: #ebe4da;
+  --border: #c9bfb0;
+  --text: #2a3540;
+  --shadow: 0 8px 32px rgba(60, 45, 30, 0.14);
+}
+
+html.night-glow .effects-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 190, 130, 0.07) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(30, 22, 40, 0.04) 0%, rgba(20, 15, 30, 0.1) 100%);
+  pointer-events: none;
+}
+
+html.night-glow .top-bar {
+  background: rgba(247, 242, 234, 0.92);
+}
+
+.wishlist-reactions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(168, 212, 230, 0.5);
+}
+
+.reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.55rem;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  font-family: var(--font);
+}
+
+.reaction-btn:hover {
+  transform: scale(1.08);
+  border-color: var(--border);
+}
+
+.reaction-btn.active {
+  border-color: var(--accent-2);
+  background: #e8f0ff;
+  box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.15);
+}
+
+.reaction-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 0.85rem;
+  text-align: center;
+}
+
 /* Spinner */
 .spinner {
   display: inline-block;
@@ -1757,4 +2092,7 @@ html, body {
   .journey-columns { grid-template-columns: 1fr; }
   .user-badge span:not(.avatar):not(.chevron):not(.partner-status-dot) { display: none; }
   .panel { width: 100vw; }
+  .travelers-sprite { --traveler-w: 110px; }
+  .travelers-note { width: 1.9rem; height: 1.9rem; font-size: 0.95rem; margin-bottom: 0.5rem; }
+  .travelers-bubble { max-width: min(210px, 82vw); font-size: 0.8rem; }
 }

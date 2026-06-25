@@ -101,7 +101,9 @@ const Messaging = {
     Trips.renderList();
     this.render();
     this.updateBadge();
-    App.showToast('Trip approved!');
+
+    const city = trip?.city;
+    Effects.celebrateApproval(city);
   },
 
   async rejectTrip(msgId) {

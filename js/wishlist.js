@@ -189,6 +189,33 @@ const Wishlist = {
     });
   },
 
+  renderReactions(item) {
+    const user = Auth.getCurrentUser();
+    const partner = Auth.getOtherUser(user);
+    const reactions = item.reactions || {};
+
+    return `
+      <div class="wishlist-reactions">
+        ${Effects.REACTION_KEYS.map((key) => {
+          const emoji = Effects.REACTION_EMOJI[key];
+          const users = reactions[key] || {};
+          const mine = !!users[user];
+          const count = (users[user] ? 1 : 0) + (users[partner] ? 1 : 0);
+          return `
+            <button type="button" class="reaction-btn ${mine ? 'active' : ''}"
+                    data-reaction="${key}" data-item="${item.id}" title="React ${emoji}">
+              <span class="reaction-emoji">${emoji}</span>
+              ${count > 0 ? `<span class="reaction-count">${count}</span>` : ''}
+            </button>`;
+        }).join('')}
+      </div>`;
+  },
+
+  async toggleReaction(itemId, reactionKey) {
+    await Storage.toggleWishlistReaction(itemId, reactionKey);
+    this.render();
+  },
+
   render(highlightId = null) {
     const listEl = document.getElementById('wishlist-list');
     const items = Storage.getWishlist();
@@ -225,6 +252,7 @@ const Wishlist = {
           ${item.title ? `<h3 class="wishlist-title">${item.title}</h3>` : ''}
           ${body}
           ${item.notes ? `<p class="wishlist-notes">${item.notes}</p>` : ''}
+          ${this.renderReactions(item)}
           <div class="wishlist-author">
             <span class="avatar small ${item.createdBy}">${author?.avatar || '?'}</span>
             <span>Wishlisted by <strong>${author?.name || item.createdBy}</strong></span>
@@ -245,6 +273,13 @@ const Wishlist = {
         e.stopPropagation();
         const item = items.find(i => i.id === btn.dataset.map);
         if (item) this.viewOnMap(item);
+      });
+    });
+
+    listEl.querySelectorAll('[data-reaction]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleReaction(btn.dataset.item, btn.dataset.reaction);
       });
     });
 

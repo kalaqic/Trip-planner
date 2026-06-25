@@ -19,6 +19,8 @@ const Storage = {
     wishlist: []
   },
 
+  _messageIdsSeen: null,
+
   unsubscribers: [],
   _initialized: false,
   connected: false,
@@ -128,6 +130,7 @@ const Storage = {
     this._initialized = false;
     this.connected = false;
     this.cache = { trips: [], messages: [], wishlist: [] };
+    this._messageIdsSeen = null;
     this.ready = createStorageReady();
   },
 
@@ -138,12 +141,39 @@ const Storage = {
       TripMap.refresh();
       Trips.renderList(App.currentTab);
     } else if (type === 'messages') {
+      this._handleNewMessages(this.cache.messages);
       Messaging.render();
       Messaging.updateBadge();
     } else if (type === 'wishlist') {
       TripMap.refresh();
       Wishlist.render();
     }
+  },
+
+  _handleNewMessages(messages) {
+    const user = Auth.getCurrentUser();
+    const ids = new Set(messages.map((m) => m.id));
+
+    if (this._messageIdsSeen === null) {
+      this._messageIdsSeen = ids;
+      return;
+    }
+
+    if (!user) return;
+
+    messages.forEach((m) => {
+      if (this._messageIdsSeen.has(m.id)) return;
+      if (m.to !== user) return;
+
+      if (m.type === 'love_note') {
+        Effects.loveNoteSparkle();
+      } else if (m.type === 'trip_approved') {
+        const trip = this.cache.trips.find((t) => t.id === m.tripId);
+        Effects.celebrateApproval(trip?.city);
+      }
+    });
+
+    this._messageIdsSeen = ids;
   },
 
   getTrips() {
@@ -207,6 +237,32 @@ const Storage = {
 
   async removeWishlistItem(id) {
     await FirebaseApp.db.collection('wishlist').doc(id).delete();
+  },
+
+  async updateWishlistItem(id, updates) {
+    await FirebaseApp.db.collection('wishlist').doc(id).update(updates);
+    const item = this.cache.wishlist.find((w) => w.id === id);
+    return item ? { ...item, ...updates } : null;
+  },
+
+  async toggleWishlistReaction(itemId, reactionKey) {
+    const user = Auth.getCurrentUser();
+    if (!user) return;
+
+    const item = this.cache.wishlist.find((w) => w.id === itemId);
+    if (!item) return;
+
+    const reactions = item.reactions
+      ? JSON.parse(JSON.stringify(item.reactions))
+      : { love: {}, fire: {}, eyes: {} };
+
+    ['love', 'fire', 'eyes'].forEach((k) => {
+      if (!reactions[k]) reactions[k] = {};
+    });
+
+    reactions[reactionKey][user] = !reactions[reactionKey][user];
+    await this.updateWishlistItem(itemId, { reactions });
+    return reactions;
   }
 };
 

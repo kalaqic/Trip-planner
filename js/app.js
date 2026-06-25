@@ -81,6 +81,7 @@ const App = {
     TripMap.refresh();
     Wishlist.render();
     Presence.start();
+    Effects.init();
     this.maybeShowOnboarding();
   },
 
@@ -114,6 +115,7 @@ const App = {
 
   async signOut() {
     await Presence.stop();
+    Effects.stop();
     TripMap.destroy();
     Storage.destroy();
     Auth.logout();
