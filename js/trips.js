@@ -19,8 +19,8 @@ const Trips = {
     david: '<span class="leg-route-badge david">David</span>'
   },
 
-  TRANSPORT_ICONS: { plane: '✈', bus: '🚌', train: '🚂', car: '🚗', ferry: '⛴' },
-  TRANSPORT_LABELS: { plane: 'Plane', bus: 'Bus', train: 'Train', car: 'Car', ferry: 'Ferry' },
+  TRANSPORT_ICONS: { plane: '✈', bus: '🚌', train: '🚂', car: '🚗', ferry: '⛴', walking: '🚶' },
+  TRANSPORT_LABELS: { plane: 'Plane', bus: 'Bus', train: 'Train', car: 'Car', ferry: 'Ferry', walking: 'Walking' },
 
   resetWizard() {
     this.wizard = {

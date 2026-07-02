@@ -1614,6 +1614,7 @@ html, body {
 .timeline-dot.train { border-color: #a29bfe; background: #f0eeff; }
 .timeline-dot.car { border-color: #fab1a0; background: #fff0ed; }
 .timeline-dot.ferry { border-color: #81ecec; background: #e8fffe; }
+.timeline-dot.walking { border-color: #7ec8a0; background: #e8f8ef; }
 
 .timeline-line {
   width: 3px;
@@ -1715,6 +1716,7 @@ html, body {
 .journey-dot.train { border-color: #a29bfe; background: #f0eeff; }
 .journey-dot.car { border-color: #fab1a0; background: #fff0ed; }
 .journey-dot.ferry { border-color: #81ecec; background: #e8fffe; }
+.journey-dot.walking { border-color: #7ec8a0; background: #e8f8ef; }
 
 .journey-line {
   width: 3px;
