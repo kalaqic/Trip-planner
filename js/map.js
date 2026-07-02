@@ -409,8 +409,10 @@ const TripMap = {
   },
 
   getMapMarkers(trips = Storage.getTrips()) {
+    const user = Auth.getCurrentUser();
     const markers = trips
       .filter((t) => t.status !== 'rejected' && t.lat && t.lng)
+      .filter((t) => !Trips.isSurpriseHidden(t, user))
       .map((t) => ({ ...t }));
 
     Storage.getWishlist()

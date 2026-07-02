@@ -1036,6 +1036,89 @@ html, body {
 .status-badge.visited { background: #d5f5e3; color: #27ae60; }
 .status-badge.upcoming { background: #ecf0f1; color: #7f8c8d; }
 .status-badge.pending { background: #e0e8ff; color: #3a86ff; }
+.status-badge.surprise { background: #fce8ff; color: #9b59b6; }
+
+.surprise-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.25rem 0 1rem;
+  padding: 0.75rem 0.85rem;
+  border: 2px solid #e8d4f8;
+  border-radius: var(--radius-sm);
+  background: #faf4ff;
+  cursor: pointer;
+}
+
+.surprise-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.surprise-toggle-box {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.15rem;
+  border: 2px solid #c39bd3;
+  border-radius: 4px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.surprise-toggle input:checked + .surprise-toggle-box {
+  background: #9b59b6;
+  border-color: #9b59b6;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+.surprise-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.surprise-toggle-text small {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.trip-card.surprise-hidden,
+.message-card.surprise-hidden {
+  border-color: #e8d4f8;
+  background: linear-gradient(180deg, #fff 0%, #faf4ff 100%);
+}
+
+.surprise-teaser {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: #8e44ad;
+  font-weight: 600;
+}
+
+.surprise-detail-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #f5e6ff 0%, #e8f4fc 100%);
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.surprise-detail-copy {
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.message-trip-preview.surprise-preview {
+  background: #faf4ff;
+  border-color: #e8d4f8;
+}
 
 .trip-card-meta { font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 0.2rem; }
 .trip-card-countdown { margin-top: 0.5rem; font-size: 0.78rem; font-weight: 700; color: var(--accent); }

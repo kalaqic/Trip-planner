@@ -169,7 +169,8 @@ const Storage = {
         Effects.loveNoteSparkle();
       } else if (m.type === 'trip_approved') {
         const trip = this.cache.trips.find((t) => t.id === m.tripId);
-        Effects.celebrateApproval(trip?.city);
+        const city = trip?.isSurprise ? null : trip?.city;
+        Effects.celebrateApproval(city);
       }
     });
 

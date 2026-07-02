@@ -146,8 +146,8 @@ const Effects = {
   },
 
   celebrateApproval(city) {
-    const name = city || 'Your trip';
-    App.showToast(`${name} is officially happening! 🎉`);
+    const name = city || 'Your surprise trip';
+    App.showToast(city ? `${name} is officially happening! 🎉` : `${name} is officially happening! ✨`);
     this.burst('heart', 22);
     this.travelersCelebrate();
   },

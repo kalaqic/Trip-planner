@@ -1,14 +1,24 @@
 const Messaging = {
   async sendTripForApproval(trip, from, to, fromName, isEdit = false) {
+    const isSurprise = !!trip.isSurprise;
+    let text;
+    if (isSurprise) {
+      text = isEdit
+        ? `${fromName} updated a surprise trip for you! ✨`
+        : `${fromName} planned a surprise trip for you! ✨`;
+    } else {
+      text = isEdit
+        ? `${fromName} updated the trip to ${trip.city}! Please review the changes.`
+        : `${fromName} wants to plan a trip to ${trip.city}!`;
+    }
+
     const msg = {
       id: generateId(),
       type: 'trip_approval',
       tripId: trip.id,
       from,
       to,
-      text: isEdit
-        ? `${fromName} updated the trip to ${trip.city}! Please review the changes.`
-        : `${fromName} wants to plan a trip to ${trip.city}!`,
+      text,
       read: false,
       status: 'pending',
       createdAt: new Date().toISOString()
@@ -91,7 +101,9 @@ const Messaging = {
       tripId: msg.tripId,
       from: user,
       to: other,
-      text: `${userInfo.name} approved the trip to ${trip?.city || 'your destination'}! 🎉`,
+      text: trip?.isSurprise
+        ? `${userInfo.name} is excited about the surprise trip! ✨`
+        : `${userInfo.name} approved the trip to ${trip?.city || 'your destination'}! 🎉`,
       read: false,
       status: 'approved',
       createdAt: new Date().toISOString()
@@ -102,7 +114,7 @@ const Messaging = {
     this.render();
     this.updateBadge();
 
-    const city = trip?.city;
+    const city = trip?.isSurprise ? null : trip?.city;
     Effects.celebrateApproval(city);
   },
 
@@ -125,7 +137,9 @@ const Messaging = {
       tripId: msg.tripId,
       from: user,
       to: other,
-      text: `${userInfo.name} declined the trip to ${trip?.city || 'your destination'}.`,
+      text: trip?.isSurprise
+        ? `${userInfo.name} declined the surprise trip.`
+        : `${userInfo.name} declined the trip to ${trip?.city || 'your destination'}.`,
       read: false,
       status: 'rejected',
       createdAt: new Date().toISOString()
@@ -169,12 +183,22 @@ const Messaging = {
 
       let tripPreview = '';
       if (trip) {
-        tripPreview = `
-          <div class="message-trip-preview">
-            <strong>${trip.name}</strong>
-            📍 ${trip.city} · ${Trips.formatDate(trip.startDate)} – ${Trips.formatDate(trip.endDate)}
-            <br>${trip.type === 'workaway' ? '🌱 Workaway' : '🏠 Basic Trip'} · €${(trip.totalCost || 0).toFixed(2)}
-          </div>`;
+        const hidden = Trips.isSurpriseHidden(trip, user);
+        if (hidden) {
+          tripPreview = `
+            <div class="message-trip-preview surprise-preview">
+              <strong>✨ Surprise trip</strong>
+              📅 ${Trips.formatDateRange(trip)}
+              <br><span class="surprise-teaser">Destination hidden until the trip starts</span>
+            </div>`;
+        } else {
+          tripPreview = `
+            <div class="message-trip-preview">
+              <strong>${trip.name}</strong>
+              📍 ${trip.city} · ${Trips.formatDateRange(trip)}
+              <br>${trip.type === 'workaway' ? '🌱 Workaway' : '🏠 Basic Trip'} · €${(trip.totalCost || 0).toFixed(2)}
+            </div>`;
+        }
       }
 
       let wishlistPreview = '';

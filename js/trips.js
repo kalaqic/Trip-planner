@@ -30,6 +30,7 @@ const Trips = {
     document.getElementById('city-search').value = '';
     document.getElementById('city-results').innerHTML = '';
     document.getElementById('trip-form').reset();
+    document.getElementById('trip-surprise').checked = false;
     document.querySelectorAll('.workaway-field, .basic-field').forEach(el => el.classList.add('hidden'));
     document.getElementById('leg-form').classList.add('hidden');
     document.getElementById('leg-route-picker').classList.add('hidden');
@@ -89,6 +90,7 @@ const Trips = {
     document.getElementById('trip-notes').value = trip.planningNotes || '';
     document.getElementById('trip-start').value = trip.startDate || '';
     document.getElementById('trip-end').value = trip.endDate || '';
+    document.getElementById('trip-surprise').checked = !!trip.isSurprise;
     document.getElementById('workaway-url').value = trip.workawayUrl || '';
     document.getElementById('apartment-location').value = trip.apartmentLocation || '';
     document.getElementById('booking-link').value = trip.bookingLink || '';
@@ -407,7 +409,8 @@ const Trips = {
       totalCost: this.calcTotalCost(),
       workawayUrl: document.getElementById('workaway-url').value.trim(),
       apartmentLocation: document.getElementById('apartment-location').value.trim(),
-      bookingLink: document.getElementById('booking-link').value.trim()
+      bookingLink: document.getElementById('booking-link').value.trim(),
+      isSurprise: document.getElementById('trip-surprise').checked
     };
 
     if (this.wizard.editingTripId) {
@@ -453,7 +456,9 @@ const Trips = {
 
       await Storage.addTrip(trip);
       await Messaging.sendTripForApproval(trip, user, other, Auth.getUserInfo(user).name);
-      App.showToast(`Trip sent to ${Auth.getUserInfo(other).name} for approval!`);
+      App.showToast(trip.isSurprise
+        ? `Surprise trip sent to ${Auth.getUserInfo(other).name}! ✨`
+        : `Trip sent to ${Auth.getUserInfo(other).name} for approval!`);
     }
 
     this.resetWizard();
@@ -477,6 +482,23 @@ const Trips = {
 
   isCompleted(trip) {
     return trip.status === 'approved' && this.getStatus(trip) === 'visited';
+  },
+
+  isSurpriseHidden(trip, user = Auth.getCurrentUser()) {
+    if (!trip?.isSurprise || !user) return false;
+    if (trip.createdBy === user) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(`${trip.startDate}T00:00:00`);
+    return today < start;
+  },
+
+  formatDateRange(trip) {
+    return `${this.formatDate(trip.startDate)} – ${this.formatDate(trip.endDate)}`;
+  },
+
+  getCreatorName(trip) {
+    return Auth.getUserInfo(trip.createdBy)?.name || trip.createdBy;
   },
 
   getCountdown(startDate) {
@@ -674,15 +696,32 @@ const Trips = {
 
     listEl.innerHTML = trips.map(trip => {
       const status = this.getStatus(trip);
+      const user = Auth.getCurrentUser();
+      const hidden = this.isSurpriseHidden(trip, user);
+
+      if (hidden) {
+        const creator = this.getCreatorName(trip);
+        return `<div class="trip-card surprise-hidden" data-id="${trip.id}">
+          <div class="trip-card-header">
+            <h3>Surprise trip ✨</h3>
+            <span class="status-badge surprise">secret</span>
+          </div>
+          <div class="trip-card-meta">
+            <span>📅 ${this.formatDateRange(trip)}</span>
+          </div>
+          <p class="surprise-teaser">${creator} planned something special for you</p>
+        </div>`;
+      }
+
       const cd = status === 'upcoming' ? this.getCountdown(trip.startDate) : null;
       return `<div class="trip-card" data-id="${trip.id}">
         <div class="trip-card-header">
-          <h3>${trip.name}</h3>
+          <h3>${trip.name}${trip.isSurprise ? ' ✨' : ''}</h3>
           <span class="status-badge ${status}">${status}</span>
         </div>
         <div class="trip-card-meta">
           <span>📍 ${trip.city}, ${trip.country || ''}</span>
-          <span>📅 ${this.formatDate(trip.startDate)} – ${this.formatDate(trip.endDate)}</span>
+          <span>📅 ${this.formatDateRange(trip)}</span>
           <span>${trip.type === 'workaway' ? '🌱 Workaway' : '🏠 Basic Trip'}</span>
         </div>
         ${cd ? `<div class="trip-card-countdown">⏱ ${cd.value} ${cd.label}</div>` : ''}
@@ -700,6 +739,12 @@ const Trips = {
   showDetail(tripId) {
     const trip = Storage.getTrips().find(t => t.id === tripId);
     if (!trip) return;
+
+    const user = Auth.getCurrentUser();
+    if (this.isSurpriseHidden(trip, user)) {
+      this.showSurpriseDetail(trip);
+      return;
+    }
 
     const status = this.getStatus(trip);
     const cd = status === 'upcoming' ? this.getCountdown(trip.startDate) : null;
@@ -771,6 +816,29 @@ const Trips = {
         this.saveMemories(tripId);
       });
     }
+
+    App.openModal('trip-detail-modal');
+  },
+
+  showSurpriseDetail(trip) {
+    const creator = this.getCreatorName(trip);
+    const revealDate = this.formatDate(trip.startDate);
+
+    document.getElementById('trip-detail-content').innerHTML = `
+      <div class="trip-detail surprise-detail">
+        <div class="surprise-detail-hero">✨</div>
+        <div class="trip-detail-actions">
+          <span class="status-badge surprise">surprise</span>
+        </div>
+        <h2>Surprise trip</h2>
+        <p class="surprise-detail-copy">
+          ${creator} planned something special for you. You'll only see the destination when the trip starts on <strong>${revealDate}</strong>.
+        </p>
+        <div class="detail-section">
+          <h4>Dates</h4>
+          <p>${this.formatDateRange(trip)}</p>
+        </div>
+      </div>`;
 
     App.openModal('trip-detail-modal');
   }
